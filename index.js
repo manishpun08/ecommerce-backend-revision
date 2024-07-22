@@ -1,19 +1,19 @@
 import express from 'express';
 import connectDB from './database-connection/db.connect.js';
+import userRoutes from './user/user.controller.js';
+import productRoutes from './product/product.controller.js';
 
 const app = express();
 
 // to make app understand json
 app.use(express.json());
 
-//TODO: enable CORS
-
 // connect database
 await connectDB();
 
 // register routes
-
-//TODO: handle global error
+app.use(userRoutes);
+app.use(productRoutes);
 
 // network port and server
 const PORT = process.env.PORT;
