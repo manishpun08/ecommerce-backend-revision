@@ -1,5 +1,9 @@
 import express from 'express';
-import { isSeller, isUser } from '../middleware/authentication.middleware.js';
+import {
+  isBuyer,
+  isSeller,
+  isUser,
+} from '../middleware/authentication.middleware.js';
 import validateMongoIdFromParams from '../middleware/validate.mongo.id.js';
 import validateReqBody from '../middleware/validate.req.body.js';
 import checkMongoIdsEquality from '../utils/mongo.id.equality.js';
@@ -178,4 +182,48 @@ router.post(
   }
 );
 
+// * list product by buyer
+router.post(
+  '/product/buyer/list',
+  isBuyer,
+  validateReqBody(paginationDataValidationSchema),
+  async (req, res) => {
+    // extract pagination data from req.body
+    const { page, limit, searchText } = req.body;
+
+    let match = {};
+
+    if (searchText) {
+      match.name = { $regex: searchText, $options: 'i' };
+    }
+
+    // calculate skip
+    const skip = (page - 1) * limit;
+
+    // find products
+    const products = await Product.aggregate([
+      {
+        $match: match,
+      },
+
+      {
+        $skip: skip,
+      },
+      { $limit: limit },
+
+      {
+        $project: {
+          name: 1,
+          brand: 1,
+          price: 1,
+          image: 1,
+          description: { $substr: ['$description', 0, 200] },
+        },
+      },
+    ]);
+
+    // send res
+    return res.status(200).send({ message: 'success', productList: products });
+  }
+);
 export default router;
