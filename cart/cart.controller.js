@@ -6,7 +6,6 @@ import { addCartItemValidationSchema } from './cart.validation.js';
 import Product from '../product/product.model.js';
 import Cart from './cart.model.js';
 import validateMongoIdFromParams from '../middleware/validate.mongo.id.js';
-import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -88,7 +87,7 @@ router.delete(
     // check cart ownership
     const cart = await Cart.findOne({
       _id: cartId,
-      buyerId: new mongoose.Types.ObjectId(req.loggedInUserId),
+      buyerId,
     });
 
     // if not cart, throw error
