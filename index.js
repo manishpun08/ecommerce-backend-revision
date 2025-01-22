@@ -3,8 +3,15 @@ import cartRoutes from './cart/cart.controller.js';
 import connectDB from './database-connection/db.connect.js';
 import productRoutes from './product/product.controller.js';
 import userRoutes from './user/user.controller.js';
+import adminRoutes from './admin/admin.controller.js';
+import paymentRoutes from './payment/payment.controller.js';
+
+import cors from 'cors';
 
 const app = express();
+
+// to make app understand cors
+app.use(cors());
 
 // to make app understand json
 app.use(express.json());
@@ -16,6 +23,8 @@ await connectDB();
 app.use(userRoutes);
 app.use(productRoutes);
 app.use(cartRoutes);
+app.use(adminRoutes);
+app.use(paymentRoutes);
 
 // network port and server
 const PORT = process.env.PORT;

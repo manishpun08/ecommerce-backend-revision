@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { productCategories } from '../constant/general.constant.js';
 
 // set schema
 const productSchema = new mongoose.Schema(
@@ -30,14 +29,13 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: productCategories,
     },
     freeShipping: {
       type: Boolean,
       required: false,
       default: false,
     },
-    sellerId: {
+    adminId: {
       type: mongoose.ObjectId,
       required: true,
       ref: 'User',
@@ -46,7 +44,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      minlength: 10,
+      minlength: 100,
       maxlength: 1000,
     },
     image: {
@@ -62,7 +60,7 @@ const productSchema = new mongoose.Schema(
 
 productSchema.methods.toJSON = function () {
   let obj = this.toObject(); // it converts BSON to JSON
-  delete obj.sellerId;
+  delete obj.adminId;
   return obj;
 };
 

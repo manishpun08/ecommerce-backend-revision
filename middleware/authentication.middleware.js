@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../user/user.model.js';
 
-// seller role
-export const isSeller = async (req, res, next) => {
+// admin role
+export const isAdmin = async (req, res, next) => {
   try {
     // extract token from req.headers
     const authorization = req.headers.authorization;
@@ -29,9 +29,9 @@ export const isSeller = async (req, res, next) => {
       throw new Error();
     }
 
-    // check if user role is "seller"
-    //  if user role is not "seller", throw error
-    if (user.role !== 'seller') {
+    // check if user role is "admin"
+    //  if user role is not "admin", throw error
+    if (user.role !== 'admin') {
       throw new Error();
     }
 
@@ -41,11 +41,11 @@ export const isSeller = async (req, res, next) => {
     // call next function
     next();
   } catch (error) {
-    return res.status(401).send({ message: 'Unauthorized.' });
+    return res.status(401).send({ message: 'You are not admin.' });
   }
 };
 
-// role can be seller or buyer
+// role can be admin or buyer
 // role is not checked
 export const isUser = async (req, res, next) => {
   try {

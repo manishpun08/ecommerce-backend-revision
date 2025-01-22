@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   isBuyer,
-  isSeller,
+  isAdmin,
   isUser,
 } from '../middleware/authentication.middleware.js';
 import validateMongoIdFromParams from '../middleware/validate.mongo.id.js';
@@ -18,14 +18,14 @@ const router = express.Router();
 // *add product
 router.post(
   '/product/add',
-  isSeller,
+  isAdmin,
   validateReqBody(addProductValidationSchema),
   async (req, res) => {
     // extract newProduct from req.body
     const newProduct = req.body;
 
-    // add seller Id
-    newProduct.sellerId = req.loggedInUserId;
+    // add admin Id
+    newProduct.adminId = req.loggedInUserId;
 
     // add product
     await Product.create(newProduct);
@@ -38,7 +38,7 @@ router.post(
 // * delete product
 router.delete(
   '/product/delete/:id',
-  isSeller,
+  isAdmin,
   validateMongoIdFromParams,
   async (req, res) => {
     // extract product id from req.params
@@ -54,7 +54,7 @@ router.delete(
 
     // check if loggedInUserId is owner of the product
     const isProductOwner = checkMongoIdsEquality(
-      product.sellerId,
+      product.adminId,
       req.loggedInUserId
     );
 
@@ -76,7 +76,7 @@ router.delete(
 // * edit product
 router.put(
   '/product/edit/:id',
-  isSeller,
+  isAdmin,
   validateMongoIdFromParams,
   validateReqBody(addProductValidationSchema),
   async (req, res) => {
@@ -93,7 +93,7 @@ router.put(
 
     // check product ownership
     const isProductOwner = checkMongoIdsEquality(
-      product.sellerId,
+      product.adminId,
       req.loggedInUserId
     );
 
@@ -142,43 +142,19 @@ router.get(
   }
 );
 
-// * list product by seller
+// * list product by admin
 router.post(
-  '/product/seller/list',
-  isSeller,
-  validateReqBody(paginationDataValidationSchema),
+  '/product/admin/list',
+  isAdmin,
+  // getting admin all products function
   async (req, res) => {
-    // extract pagination data from req.body
-    const { page, limit, searchText } = req.body;
+    const allProducts = await Product.find();
 
-    //  calculate skip
-    const skip = (page - 1) * limit;
-
-    // condition
-    let match = { sellerId: req.loggedInUserId };
-
-    if (searchText) {
-      match.name = { $regex: searchText, $options: 'i' };
-    }
-
-    const products = await Product.aggregate([
-      {
-        $match: match,
-      },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $project: {
-          name: 1,
-          price: 1,
-          brand: 1,
-          image: 1,
-          description: { $substr: ['$description', 0, 200] },
-        },
-      },
-    ]);
-
-    return res.status(200).send({ message: 'success', productList: products });
+    // send all products data as response
+    return res.status(200).send({
+      message: 'success',
+      allProducts,
+    });
   }
 );
 
@@ -217,13 +193,17 @@ router.post(
           brand: 1,
           price: 1,
           image: 1,
-          description: { $substr: ['$description', 0, 200] },
+          description: { $substr: ['$description', 0, 150] },
         },
       },
     ]);
+    const totalProducts = await Product.find(match).countDocuments();
+    const numberOfPages = Math.ceil(totalProducts / limit);
 
     // send res
-    return res.status(200).send({ message: 'success', productList: products });
+    return res
+      .status(200)
+      .send({ message: 'success', productList: products, numberOfPages });
   }
 );
 export default router;
